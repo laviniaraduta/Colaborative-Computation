@@ -3,3 +3,8 @@ build:
 
 clean:
 	rm -rf tema3
+
+pack:
+	zip -FSr 333CA_lavinia_raduta_tema3.zip README.md Makefile *.c *.h
+
+.PHONY: pack clean
