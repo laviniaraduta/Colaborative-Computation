@@ -6,6 +6,7 @@
 #define N_CLUSTERS 4
 #define TAG 0
 
+void spread_N(int rank, int *N);
 void print_topology(int rank, int *coordinators, int procs);
 void spread_coordinators(int rank, int *coordinators, int *coordinator, int *num_workers, int **workers);
 void complete_topology_no_error(int rank, int *coordinators, int procs, int num_workers, int *workers);
@@ -27,3 +28,15 @@ void spread_work_error(
     double work_size, int num_workers,
     int *workers, int N,
     int **to_compute, int *index);
+
+
+void spread_N_partition(int rank, int *N);
+void complete_topology_partition(int rank, int *coordinators, int procs, int num_workers, int *workers);
+void spread_topology_partition(int rank, int *coordinators, int coordinator, int procs, int num_workers, int *workers);
+void spread_work_partition(
+    int rank, int coordinator,
+    double work_size, int num_workers,
+    int *workers, int N,
+    int **to_compute, int *index);
+
+void combine_results_partition(int rank, int N, int *to_compute, int start_index);
