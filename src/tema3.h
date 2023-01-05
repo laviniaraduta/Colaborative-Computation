@@ -5,6 +5,10 @@
 
 #define N_CLUSTERS 4
 #define TAG 0
+#define OUT_CLUSTER 1
+#define MASTER 0
+
+int count_workers(int *coordinators, int procs);
 
 void spread_N(int rank, int *N);
 void print_topology(int rank, int *coordinators, int procs);
