@@ -49,8 +49,8 @@ void spread_coordinators(int rank, int *coordinators, int *coordinator, int *num
         for (int i = 0; i < *num_workers; i++) {
             fscanf(fp, "%d", &(*workers)[i]);
             MPI_Send(&rank, 1, MPI_INT, (*workers)[i], TAG, MPI_COMM_WORLD);
-            coordinators[(*workers)[i]] = rank;
             printf("M(%d,%d)\n", rank, (*workers)[i]);
+            coordinators[(*workers)[i]] = rank;
         }
 
         fclose(fp);
