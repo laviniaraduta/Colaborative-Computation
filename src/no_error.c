@@ -24,7 +24,7 @@ void print_topology(int rank, int *coordinators, int procs) {
     printf("\n");
 }
 
-void spread_coordinators_no_error(int rank, int *coordinators, int *coordinator, int *num_workers, int **workers) {
+void spread_coordinators(int rank, int *coordinators, int *coordinator, int *num_workers, int **workers) {
     MPI_Status status;
     int aux;
     if (rank >= 0 && rank < N_CLUSTERS) {
@@ -119,7 +119,6 @@ void spread_topology_no_error(int rank, int *coordinators, int coordinator, int 
     }
 }
 
-// trimit N pentru ca in afara de procesul 0, restul nu stiu cate numere trebuie sa calculeze
 // trimit apoi vectorul pe care se aplica inmultirile
 // trimit apoi cati workeri au primit deja sarcinile ca sa stiu indexul de start
 void spread_work_no_error(
@@ -185,7 +184,7 @@ void spread_work_no_error(
     }
 }
 
-int get_partial_array_no_error(int rank, int num_workers, int N, double work_size, int *workers, int index, int *to_compute) {
+int get_partial_array(int rank, int num_workers, int N, double work_size, int *workers, int index, int *to_compute) {
     MPI_Status status;
     int n, start_index = 0;
     // fiecare coordonator primeste de la workeri rezultatele partiale
@@ -202,16 +201,11 @@ int get_partial_array_no_error(int rank, int num_workers, int N, double work_siz
                 to_compute[count++] = recv[j];
             }
         }
-        printf("rank = %d, am primit de la workeri: ", rank);
-        for (int i = 0; i < N; i++) {
-            printf("%d ", to_compute[i]);
-        }
-        printf("\n"); 
     }
     return start_index;
 }
 
-void combine_results_no_error(int rank, int N, int *to_compute, int start_index) {
+void combine_results(int rank, int N, int *to_compute, int start_index) {
     // procesul 0 primeste toate rezultatele partiale si le combina
     int *recv_compute;
     MPI_Status status;
@@ -220,9 +214,11 @@ void combine_results_no_error(int rank, int N, int *to_compute, int start_index)
             recv_compute = (int *)malloc(N * sizeof(int));
             for (int i = 1; i < N_CLUSTERS; i++) {
                 MPI_Recv(recv_compute, N, MPI_INT, N_CLUSTERS - 1, TAG, MPI_COMM_WORLD, &status);
-                while (to_compute[start_index] != recv_compute[start_index]) {
-                    to_compute[start_index] = recv_compute[start_index];
-                    start_index++;
+            
+                for (int j = start_index; j < N; j++) {
+                    if (to_compute[j] == N - j - 1) {
+                        to_compute[j] = recv_compute[j];
+                    }
                 }
             }
             printf("Rezultat: ");
@@ -230,6 +226,8 @@ void combine_results_no_error(int rank, int N, int *to_compute, int start_index)
                 printf("%d ", to_compute[i]);
             }
             printf("\n");
+            fflush(stdout);
+
         } else {
             recv_compute = (int *)malloc(N * sizeof(int));  
             for (int i = 1; i < rank; i++) {
@@ -237,17 +235,21 @@ void combine_results_no_error(int rank, int N, int *to_compute, int start_index)
                 if (rank == N_CLUSTERS - 1) {
                     MPI_Send(recv_compute, N, MPI_INT, 0, TAG, MPI_COMM_WORLD);
                     printf("M(%d,%d)\n", rank, 0);
+                    fflush(stdout); 
                 } else {
                     MPI_Send(recv_compute, N, MPI_INT, rank + 1, TAG, MPI_COMM_WORLD);
                     printf("M(%d,%d)\n", rank, rank + 1);
+                    fflush(stdout);
                 }
             }
             if (rank == N_CLUSTERS - 1) {
                 MPI_Send(to_compute, N, MPI_INT, 0, TAG, MPI_COMM_WORLD);
                 printf("M(%d,%d)\n", rank, 0);
+                fflush(stdout);
             } else {
                 MPI_Send(to_compute, N, MPI_INT, rank + 1, TAG, MPI_COMM_WORLD);
                 printf("M(%d,%d)\n", rank, rank + 1);
+                fflush(stdout);
             }
         }
     }
